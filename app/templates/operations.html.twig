@@ -1,0 +1,36 @@
+{#<link href="{{ asset('css/product.css') }}" rel="stylesheet"/>#}
+<body>
+<title>Category</title>
+<p>
+    Ваши счета
+</p>
+<label>{{ 'Ваш текцщий баланс: ' ~ currBalance }} </label><br>
+<tr>
+    <td>Баланс</td>
+    <td>Валюта</td>
+    <td>Номер</td>
+    <td>Тип</td>
+    <td>Начало</td>
+    <td>Конец</td>
+    <td>Процент</td>
+</tr><br>
+{% for account in accounts %}
+    <tr>
+        <td>{{ account.count }}</td>
+        <td>{{ account.currency }}</td>
+        <td>{{ account.number }}</td>
+        <td>{{ account.type }}</td>
+        <td>{{ account.start }}</td>
+        <td>{{ account.end }}</td>
+        <td>{{ account.percent }}</td>
+        <td>{% if account.pressed == '1' %}
+            <form action="operations/{{ account.id }}" method="post">
+                <input type="submit" value="Забрать">
+            </form>
+            {% endif %}
+        </td>
+    </tr><br>
+
+{% endfor %}
+<a style="color: red" href={{'/employee/add'}}>Add deposit</a>
+</body>

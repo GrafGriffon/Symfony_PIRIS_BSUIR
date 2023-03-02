@@ -94,6 +94,10 @@ class Employee
     #[ORM\JoinColumn(name:"passportCity")]
     private $passportCity;
 
+    #[ORM\OneToMany(targetEntity: "Account", mappedBy: "employee")]
+    #[ORM\JoinColumn(nullable: true)]
+    private $account;
+
     public function getId(): ?int
     {
         return $this->id;

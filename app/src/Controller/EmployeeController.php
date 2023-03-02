@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Account;
 use App\Entity\Category;
 use App\Entity\Employee;
+use App\Repository\AccountRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\CitizenshipRepository;
 use App\Repository\CityRepository;
@@ -27,6 +29,21 @@ use Symfony\Config\Framework\Assets\PackageConfig;
  */
 class EmployeeController extends AbstractController
 {
+    /**
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @Route("/list", name="end_bank_day", methods={"POST"})
+     */
+    public function endBankDay(Request $request, AccountRepository $accountRepository)
+    {
+        foreach ($accountRepository->findAll() as $account){
+            if ($account->getEndDateDeposit() && $account->getEndDateDeposit()>(new \DateTime())){
+//                $account->
+            }
+        }
+
+        return $this->redirect('/employee/list');
+    }
+
     /**
      * @return JsonResponse
      * @Route("/list", name="list", methods={"GET"})
@@ -121,7 +138,58 @@ class EmployeeController extends AbstractController
     }
 
     /**
-     * @return JsonResponse
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @Route("/view/{employee}/operations", name="view_one_employee", methods={"GET"})
+     */
+    public function viewEmployeeOperations(
+        Employee $employee,
+        AccountRepository $accountRepository
+    )
+    {
+        $accounts = [];
+        foreach ($accountRepository->findBy(['employee' => $employee]) as $account){
+            $pressed = false;
+            if ($account->getTypeDeposit()){
+                $pressed = $account->getTypeDeposit()->getIsReturnable() == false;
+            }
+            if ($pressed){
+                $pressed = $account->getEndDateDeposit() ?? false;
+            }
+            $accounts[] = [
+              'count' => $account->getCount()/$account->getCurrency()->getIndex(),
+              'currency' => $account->getCurrency()->getName(),
+              'number' => $account->getNumber(),
+              'type' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getName() : 'Основной счет',
+              'start' => $account->getStartDateDeposit() ? $account->getStartDateDeposit()->format('d-m-y') : null,
+              'end' => $account->getEndDateDeposit() ? $account->getEndDateDeposit()->format('d-m-y') : null,
+              'percent' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getPercent() : null,
+              'pressed' => $pressed && ($pressed < (new \DateTime()) ? true : null),
+//              'pressed' => true,
+                'id' => $account->getId()
+            ];
+        }
+        return $this->render('operations.html.twig', [
+            'employee' => $employee->getId(),
+            'currBalance' => $accountRepository->findOneBy(['employee'=>$employee])->getCount(),
+            'deposBalance' => $accountRepository->findOneBy(['employee'=>$employee])->getCount(),
+            'accounts' => $accounts
+        ]);
+    }
+
+    /**
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @Route("/view/{employee}/operations/{account}", name="get_miney_deposit", methods={"POST"})
+     */
+    public function setMoneyFromDepositEmployee(Employee $employee, Account $account, EntityManagerInterface $em)
+    {
+        dd($account);
+        $em->remove($employee);
+        $em->flush();
+        return $this->redirect('/employee/list');
+    }
+
+    /**
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
      * @Route("/remove/{employee}", name="remove_employee", methods={"POST"})
      */
     public function deleteEmployee(Employee $employee, EntityManagerInterface $em)
@@ -133,7 +201,7 @@ class EmployeeController extends AbstractController
 
 
     /**
-     * @return JsonResponse
+     * @return \Symfony\Component\HttpFoundation\Response
      * @Route("/add", name="add_employee", methods={"GET"})
      */
     public function addEmployee(
@@ -174,7 +242,7 @@ class EmployeeController extends AbstractController
     }
 
     /**
-     * @return JsonResponse
+     * @return \Symfony\Component\HttpFoundation\Response
      * @Route("/add", name="add_post_employee", methods={"POST"})
      */
     public function addEmployeePost(
@@ -202,8 +270,8 @@ class EmployeeController extends AbstractController
         $employee->setCity($cityRepository->findOneBy(['name' => $data['city']]));
         $employee->setPlaceOfBirth($data['placebirth']);
         $employee->setAdress($data['address']);
-        $employee->setFloor($data['floor'] == 'M');
-        $employee->setIsPensioner($data['floor'] == 'Y');
+        $employee->setFloor($data['floor'] === 'M');
+        $employee->setIsPensioner($data['floor'] === 'Y');
         $employee->setPhoneMobile($data['mobilephone']);
         $employee->setPhoneHome($data['phone']);
         $employee->setMail($data['mail']);
@@ -298,7 +366,7 @@ class EmployeeController extends AbstractController
         /** @var Employee $item */
         foreach ($data as $item) {
             $result[] = [
-                'fullName' => $item->getLastName(),
+                'fullName' => $item->getFullName(),
                 'date' => $item->getDateOfBirth()->format('Y-m-d'),
                 'id' => $item->getId()
             ];
