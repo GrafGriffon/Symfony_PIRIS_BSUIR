@@ -11,7 +11,7 @@
     <tr>
         <td>{{ employee.fullName }}</td>
         <td>{{ employee.date }}</td>
-        <td><a style="color: red" href={{'/view/employee/' ~ employee.id }}> {{ "detailed" }} </a>
+        <td><a style="color: red" href={{'/employee/view/' ~ employee.id }}> {{ "detailed" }} </a>
         <td><form action={{ '/employee/remove/' ~ employee.id }} method="post">
                 <button name="foo" value="upvote">Remove</button>
             </form></td>

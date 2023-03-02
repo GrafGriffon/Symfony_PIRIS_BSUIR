@@ -1,17 +1,81 @@
 {#<link href="{{ asset('css/product.css') }}" rel="stylesheet"/>#}
 <body>
 <title>Adding employee</title>
-<form action="">
+<form action="" method="post">
     <label for="fname">First name:</label><br>
     <input type="text" id="fname" name="fname" value=""><br>
     <label for="lname">Last name:</label><br>
     <input type="text" id="lname" name="lname" value=""><br>
     <label for="fname">Patronic name:</label><br>
     <input type="text" id="pname" name="pname" value=""><br>
+    <label for="income">Income:</label><br>
+    <input type="text" id="income" name="income" value=""><br>
     <label for="birthdate">Date Of Birth:</label><br>
     <input type="date" id="birthdate" name="birthdate" value=""><br>
     <label for="city">City:</label><br>
     <select id="city" name="city">
+        {% for item in city %}
+            <option>{{ item }}</option>
+        {% endfor %}
+    </select><br>
+    <label for="placebirth">Place of birth:</label><br>
+    <input type="text" id="placebirth" name="placebirth" value=""><br>
+    <label for="address">Address:</label><br>
+    <input type="text" id="address" name="address" value=""><br>
+    <label for="floor">Floor:</label><br>
+    <select id="floor" name="floor">
+        <option>M</option>
+        <option>F</option>
+    </select><br>
+    <label for="pensioner">Is pensioner:</label><br>
+    <select id="pensioner" name="pensioner">
+        <option>Y</option>
+        <option>N</option>
+    </select><br>
+    <label for="phone">Phone:</label><br>
+    <input type="tel" id="phone" name="phone" value=""><br>
+    <label for="mobilephone">Mobile phone:</label><br>
+    <input type="tel" id="mobilephone" name="mobilephone" value="" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" placeholder="333-444-5555"><br>
+    <label for="mail">Mail:</label><br>
+    <input type="email" id="mail" name="mail" value=""><br>
+    <label for="workingplace">Working place:</label><br>
+    <input type="text" id="workingplace" name="workingplace" value=""><br>
+    <label for="position">Position:</label><br>
+    <input type="text" id="position" name="position" value=""><br>
+    <label for="disability">Disability:</label><br>
+    <select id="disability" name="disability">
+        {% for item in disability %}
+            <option>{{ item }}</option>
+        {% endfor %}
+    </select><br>
+    <label for="citizenship">Citizenship:</label><br>
+    <select id="citizenship" name="citizenship">
+        {% for item in citizenship %}
+            <option>{{ item }}</option>
+        {% endfor %}
+    </select><br>
+    <label for="familyStatus">Family status:</label><br>
+    <select id="familyStatus" name="familyStatus">
+        {% for item in familyStatus %}
+            <option>{{ item }}</option>
+        {% endfor %}
+    </select><br>
+    <label for="conscript">Conscript:</label><br>
+    <select id="conscript" name="conscript">
+        {% for item in conscript %}
+            <option>{{ item }}</option>
+        {% endfor %}
+    </select><br>
+    <label for="passportseries">Passport series:</label><br>
+    <input type="text" id="passportseries" name="passportseries" value=""><br>
+    <label for="passportnumber">Passport number:</label><br>
+    <input type="text" id="passportnumber" name="passportnumber" value=""><br>
+    <label for="passportissuedby">Passport issued by:</label><br>
+    <input type="text" id="passportissuedby" name="passportissuedby" value=""><br>
+    <label for="passportstartdate">Passport start date:</label><br>
+    <input type="date" id="passportstartdate" name="passportstartdate" value=""><br>
+    <label for="passportcity">Passport city:</label><br>
+    <select id="passportcity" name="passportcity">
         {% for item in city %}
             <option>{{ item }}</option>
         {% endfor %}

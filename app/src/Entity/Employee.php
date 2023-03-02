@@ -76,7 +76,7 @@ class Employee
     private $conscript;
 
     #[ORM\Column(type: 'integer')]
-    private $income;
+    private $income = 1000;
 
     #[ORM\Column(type: 'string', length: 2)]
     private $passportSeries;
