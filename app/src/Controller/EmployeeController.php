@@ -40,7 +40,15 @@ class EmployeeController extends AbstractController
     {
         foreach ($accountRepository->findAll() as $account) {
             if ($account->getEndDateDeposit() && $account->getEndDateDeposit() > (new \DateTime())) {
-                $account->setCountPercent(($account->getCount() + $account->getCountPercent()) * (1 + $account->getTypeDeposit()->getPercent() / 1000) - $account->getCount());
+                if ($account->getTypeDeposit()){
+                    $account->setCountPercent(($account->getCount() + $account->getCountPercent()) * (1 + $account->getTypeDeposit()->getPercent() / 1000) - $account->getCount());
+                }
+                elseif ($account->getTypeCredit()){
+                    $accountEmployee = $accountRepository->findOneBy(['employee' => $account->getEmployee(), 'startDateDeposit'=>null]);
+                    $countMonths = date_diff(date_create($account->getStartDateDeposit()->format('Y-m-d')), date_create($account->getEndDateDeposit()->format('Y-m-d')))->format('%m');
+                    $accountEmployee->setCount($accountEmployee->getCount() + $account->getCount()*$account->getTypeCredit()->getPercent()/100/30/$countMonths);
+                    $account->setCountPercent(($account->getCount() - $account->getCount()*$account->getTypeCredit()->getPercent()/100/30/$countMonths + $account->getCountPercent()) * (1 + $account->getTypeCredit()->getPercent() / 100) - $account->getCount());
+                }
             }
         }
         $entityManager->flush();
@@ -159,11 +167,12 @@ class EmployeeController extends AbstractController
             if ($pressed) {
                 $pressed = $account->getEndDateDeposit() ?? false;
             }
+            $local = ($account->getTypeCredit() ? $account->getTypeCredit()->getName() : 'Основной счет');
             $accounts[] = [
                 'count' => $account->getCount() / $account->getCurrency()->getIndex(),
                 'currency' => $account->getCurrency()->getName(),
                 'number' => $account->getNumber(),
-                'type' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getName() : 'Основной счет',
+                'type' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getName() : $local,
                 'start' => $account->getStartDateDeposit() ? $account->getStartDateDeposit()->format('d-m-y') : null,
                 'end' => $account->getEndDateDeposit() ? $account->getEndDateDeposit()->format('d-m-y') : null,
                 'percent' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getPercent() : null,
@@ -313,6 +322,45 @@ class EmployeeController extends AbstractController
         foreach ($typeDepositRepository->findAll() as $item) {
             if(($item->getName() . ' ' . $item->getPercent() . '%') == $data['type']){
                 $account->setTypeDeposit($item);
+                break;
+            }
+        }
+        $entityManager->persist($account);
+        $entityManager->flush();
+        return $this->render('addDepos.html.twig', [
+            'types' => $types,
+            'employee' => $employee->getId(),
+        ]);
+    }
+
+    /**
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @Route("/{employee}/add/credit", name="add_crediit_employee2", methods={"POST"})
+     */
+    public function addPostEmployeeCredit(
+        Request               $request,
+        Employee              $employee,
+        CurrencyRepository $currencyRepository,
+        EntityManagerInterface $entityManager,
+        AccountRepository $accountRepository,
+        TypeCreditRepository $typeCreditRepository
+    )
+    {
+        $data = ($request->request->all());
+        $account = (new Account());
+        $account->setCount(-$data['count']);
+        $account->setCountPercent(0);
+        $account->setCurrency($currencyRepository->find(1));
+        $account->setEndDateDeposit((new \DateTime($data['start']))->add(new \DateInterval('P'.$data['countmonths'].'M')));
+        $account->setStartDateDeposit(new \DateTime($data['start']));
+        $account->setNumber(random_int(0, 1000));
+        $account->setEmployee($employee);
+        $mainAccount = $accountRepository->findOneBy(['employee' => $employee, 'startDateDeposit'=>null]);
+        $mainAccount->setCount($mainAccount->getCount()+$data['count']);
+        $types = [];
+        foreach ($typeCreditRepository->findAll() as $item) {
+            if(($item->getName()) == $data['type']){
+                $account->setTypeCredit($item);
                 break;
             }
         }

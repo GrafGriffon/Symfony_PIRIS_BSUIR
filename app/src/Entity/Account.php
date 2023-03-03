@@ -28,7 +28,7 @@ class Account
     #[ORM\JoinColumn(name:"type_deposit")]
     private $typeDeposit;
 
-    #[ORM\ManyToOne(targetEntity: "typeCredit", inversedBy: "account")]
+    #[ORM\ManyToOne(targetEntity: "TypeCredit", inversedBy: "account")]
     #[ORM\JoinColumn(name:"type_credit")]
     private $typeCredit;
 
@@ -189,5 +189,21 @@ class Account
     public function setEmployee($employee): void
     {
         $this->employee = $employee;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTypeCredit() : ?TypeCredit
+    {
+        return $this->typeCredit;
+    }
+
+    /**
+     * @param mixed $typeCredit
+     */
+    public function setTypeCredit($typeCredit): void
+    {
+        $this->typeCredit = $typeCredit;
     }
 }
