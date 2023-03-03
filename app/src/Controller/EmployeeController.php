@@ -14,6 +14,7 @@ use App\Repository\CurrencyRepository;
 use App\Repository\DisabilityRepository;
 use App\Repository\EmployeeRepository;
 use App\Repository\FamilyStatusRepository;
+use App\Repository\TypeCreditRepository;
 use App\Repository\TypeDepositRepository;
 use App\Repository\UserRepository;
 use App\Validation\CategoryValidator;
@@ -260,6 +261,25 @@ class EmployeeController extends AbstractController
             $types[] = $item->getName() . ' ' . $item->getPercent() . '%';
         }
         return $this->render('addDepos.html.twig', [
+            'types' => $types,
+            'employee' => $employee->getId(),
+        ]);
+    }
+
+    /**
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @Route("/{employee}/add/credit", name="add_credit_employee1", methods={"GET"})
+     */
+    public function addEmployeeCredit(
+        Employee              $employee,
+        TypeCreditRepository $typeCreditRepository
+    )
+    {
+        $types = [];
+        foreach ($typeCreditRepository->findAll() as $item) {
+            $types[] = $item->getName() . ' ' . $item->getPercent() . '%';
+        }
+        return $this->render('addCredit.html.twig', [
             'types' => $types,
             'employee' => $employee->getId(),
         ]);

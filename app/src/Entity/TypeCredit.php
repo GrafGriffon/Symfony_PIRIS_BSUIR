@@ -6,7 +6,7 @@ use App\Repository\TypeDepositRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TypeDepositRepository::class)]
-class TypeDeposit
+class TypeCredit
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -19,10 +19,7 @@ class TypeDeposit
     #[ORM\Column(type: 'integer')]
     private $percent;
 
-    #[ORM\Column(type: 'boolean')]
-    private $isReturnable;
-
-    #[ORM\OneToMany(targetEntity: "Account", mappedBy: "typeCredit")]
+    #[ORM\OneToMany(targetEntity: "Account", mappedBy: "typeDeposit")]
     #[ORM\JoinColumn(nullable: true)]
     private $account;
 

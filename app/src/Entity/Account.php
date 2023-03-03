@@ -28,6 +28,10 @@ class Account
     #[ORM\JoinColumn(name:"type_deposit")]
     private $typeDeposit;
 
+    #[ORM\ManyToOne(targetEntity: "typeCredit", inversedBy: "account")]
+    #[ORM\JoinColumn(name:"type_credit")]
+    private $typeCredit;
+
     #[ORM\Column(type: 'bigint')]
     private int $count = 0;
 
