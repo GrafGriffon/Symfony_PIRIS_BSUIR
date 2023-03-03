@@ -1,0 +1,22 @@
+{#<link href="{{ asset('css/product.css') }}" rel="stylesheet"/>#}
+<body>
+<title>Adding employee</title>
+{#<a style="color: red" href={{'/employee/list/' ~ employee.id }}}>{{ 'К банковским пореациям' }}</a>#}
+<form action="" method="post">
+    <label for="start">Start date:</label><br>
+    <input type="date" id="start" name="start" value=""><br>
+    <label for="end">End date:</label><br>
+    <input type="date" id="end" name="end" value=""><br>
+    <label for="count">Count:</label><br>
+    <input type="text" id="count" name="count" value=""><br>
+    <label for="type">Type:</label><br>
+    <select id="type" name="type">
+        {% for type in types %}
+            <option>{{ type }}</option>
+        {% endfor %}
+    </select><br>
+
+    <input type="submit" value="Submit">
+</form>
+<a style="color: red" href={{'/employee/list'}}>{{ 'To main page' }}</a>
+</body>

@@ -10,9 +10,11 @@ use App\Repository\CategoryRepository;
 use App\Repository\CitizenshipRepository;
 use App\Repository\CityRepository;
 use App\Repository\ConscriptRepository;
+use App\Repository\CurrencyRepository;
 use App\Repository\DisabilityRepository;
 use App\Repository\EmployeeRepository;
 use App\Repository\FamilyStatusRepository;
+use App\Repository\TypeDepositRepository;
 use App\Repository\UserRepository;
 use App\Validation\CategoryValidator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,13 +35,14 @@ class EmployeeController extends AbstractController
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      * @Route("/list", name="end_bank_day", methods={"POST"})
      */
-    public function endBankDay(Request $request, AccountRepository $accountRepository)
+    public function endBankDay(Request $request, AccountRepository $accountRepository, EntityManagerInterface $entityManager)
     {
-        foreach ($accountRepository->findAll() as $account){
-            if ($account->getEndDateDeposit() && $account->getEndDateDeposit()>(new \DateTime())){
-//                $account->
+        foreach ($accountRepository->findAll() as $account) {
+            if ($account->getEndDateDeposit() && $account->getEndDateDeposit() > (new \DateTime())) {
+                $account->setCountPercent(($account->getCount() + $account->getCountPercent()) * (1 + $account->getTypeDeposit()->getPercent() / 1000) - $account->getCount());
             }
         }
+        $entityManager->flush();
 
         return $this->redirect('/employee/list');
     }
@@ -80,10 +83,10 @@ class EmployeeController extends AbstractController
 
     /**
      * @return JsonResponse
-     * @Route("/view/{employee}", name="view_one_employee", methods={"GET"})
+     * @Route("/view/{employee}", name="view_one_employee_1", methods={"GET"})
      */
     public function viewEmployee(
-        Employee $employee,
+        Employee               $employee,
         DisabilityRepository   $disabilityRepository,
         CityRepository         $cityRepository,
         CitizenshipRepository  $citizenshipRepository,
@@ -118,14 +121,14 @@ class EmployeeController extends AbstractController
             'familyStatus' => $familyStatus,
             'conscript' => $conscript,
             'employee' => [
-                'fname'=>$employee->getFirstName(),
-                'lname'=>$employee->getLastName(),
-                'pname'=>$employee->getPatronicName(),
-                'id'=>$employee->getId(),
-                'placebirth'=>$employee->getPlaceOfBirth(),
-                'address'=>$employee->getAdress(),
-                'phone'=>$employee->getPhoneHome(),
-                'mobilephone'=>$employee->getPhoneMobile(),
+                'fname' => $employee->getFirstName(),
+                'lname' => $employee->getLastName(),
+                'pname' => $employee->getPatronicName(),
+                'id' => $employee->getId(),
+                'placebirth' => $employee->getPlaceOfBirth(),
+                'address' => $employee->getAdress(),
+                'phone' => $employee->getPhoneHome(),
+                'mobilephone' => $employee->getPhoneMobile(),
                 'mail' => $employee->getMail(),
                 'workingplace' => $employee->getWorkingPlace(),
                 'passportseries' => $employee->getPassportSeries(),
@@ -142,36 +145,36 @@ class EmployeeController extends AbstractController
      * @Route("/view/{employee}/operations", name="view_one_employee", methods={"GET"})
      */
     public function viewEmployeeOperations(
-        Employee $employee,
+        Employee          $employee,
         AccountRepository $accountRepository
     )
     {
         $accounts = [];
-        foreach ($accountRepository->findBy(['employee' => $employee]) as $account){
+        foreach ($accountRepository->findBy(['employee' => $employee]) as $account) {
             $pressed = false;
-            if ($account->getTypeDeposit()){
+            if ($account->getTypeDeposit()) {
                 $pressed = $account->getTypeDeposit()->getIsReturnable() == false;
             }
-            if ($pressed){
+            if ($pressed) {
                 $pressed = $account->getEndDateDeposit() ?? false;
             }
             $accounts[] = [
-              'count' => $account->getCount()/$account->getCurrency()->getIndex(),
-              'currency' => $account->getCurrency()->getName(),
-              'number' => $account->getNumber(),
-              'type' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getName() : 'Основной счет',
-              'start' => $account->getStartDateDeposit() ? $account->getStartDateDeposit()->format('d-m-y') : null,
-              'end' => $account->getEndDateDeposit() ? $account->getEndDateDeposit()->format('d-m-y') : null,
-              'percent' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getPercent() : null,
-              'pressed' => $pressed && ($pressed < (new \DateTime()) ? true : null),
+                'count' => $account->getCount() / $account->getCurrency()->getIndex(),
+                'currency' => $account->getCurrency()->getName(),
+                'number' => $account->getNumber(),
+                'type' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getName() : 'Основной счет',
+                'start' => $account->getStartDateDeposit() ? $account->getStartDateDeposit()->format('d-m-y') : null,
+                'end' => $account->getEndDateDeposit() ? $account->getEndDateDeposit()->format('d-m-y') : null,
+                'percent' => $account->getTypeDeposit() ? $account->getTypeDeposit()->getPercent() : null,
+                'pressed' => $pressed && ($pressed < (new \DateTime()) ? true : null),
 //              'pressed' => true,
                 'id' => $account->getId()
             ];
         }
         return $this->render('operations.html.twig', [
             'employee' => $employee->getId(),
-            'currBalance' => $accountRepository->findOneBy(['employee'=>$employee])->getCount(),
-            'deposBalance' => $accountRepository->findOneBy(['employee'=>$employee])->getCount(),
+            'currBalance' => $accountRepository->findOneBy(['employee' => $employee])->getCount(),
+            'deposBalance' => $accountRepository->findOneBy(['employee' => $employee])->getCount(),
             'accounts' => $accounts
         ]);
     }
@@ -180,10 +183,12 @@ class EmployeeController extends AbstractController
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      * @Route("/view/{employee}/operations/{account}", name="get_miney_deposit", methods={"POST"})
      */
-    public function setMoneyFromDepositEmployee(Employee $employee, Account $account, EntityManagerInterface $em)
+    public function setMoneyFromDepositEmployee(Employee $employee, Account $account, EntityManagerInterface $em, AccountRepository $accountRepository)
     {
-        dd($account);
-        $em->remove($employee);
+        $mainAccountBank = $accountRepository->findOneBy(['employee' => null]);
+        $mainAccount = $accountRepository->findOneBy(['employee' => $employee, 'startDateDeposit' => null]);
+        $mainAccount->setCount($mainAccount->getCount() + $account->getCount() + $account->getCountPercent());
+        $em->remove($account);
         $em->flush();
         return $this->redirect('/employee/list');
     }
@@ -238,6 +243,64 @@ class EmployeeController extends AbstractController
             'citizenship' => $citizenship,
             'familyStatus' => $familyStatus,
             'conscript' => $conscript
+        ]);
+    }
+
+    /**
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @Route("/{employee}/add/depos", name="add_depos_employee1", methods={"GET"})
+     */
+    public function addEmployeeDepos(
+        Employee              $employee,
+        TypeDepositRepository $typeDepositRepository
+    )
+    {
+        $types = [];
+        foreach ($typeDepositRepository->findAll() as $item) {
+            $types[] = $item->getName() . ' ' . $item->getPercent() . '%';
+        }
+        return $this->render('addDepos.html.twig', [
+            'types' => $types,
+            'employee' => $employee->getId(),
+        ]);
+    }
+
+    /**
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @Route("/{employee}/add/depos", name="add_depos_employee2", methods={"POST"})
+     */
+    public function addPostEmployeeDepos(
+        Request               $request,
+        Employee              $employee,
+        CurrencyRepository $currencyRepository,
+        EntityManagerInterface $entityManager,
+        AccountRepository $accountRepository,
+        TypeDepositRepository $typeDepositRepository
+    )
+    {
+        $data = ($request->request->all());
+        $account = (new Account());
+        $account->setCount($data['count']);
+        $account->setCountPercent(0);
+        $account->setCurrency($currencyRepository->find(1));
+        $account->setEndDateDeposit(new \DateTime($data['end']));
+        $account->setStartDateDeposit(new \DateTime($data['start']));
+        $account->setNumber(random_int(0, 1000));
+        $account->setEmployee($employee);
+        $mainAccount = $accountRepository->findOneBy(['employee' => $employee, 'startDateDeposit'=>null]);
+        $mainAccount->setCount($mainAccount->getCount()-$data['count']);
+        $types = [];
+        foreach ($typeDepositRepository->findAll() as $item) {
+            if(($item->getName() . ' ' . $item->getPercent() . '%') == $data['type']){
+                $account->setTypeDeposit($item);
+                break;
+            }
+        }
+        $entityManager->persist($account);
+        $entityManager->flush();
+        return $this->render('addDepos.html.twig', [
+            'types' => $types,
+            'employee' => $employee->getId(),
         ]);
     }
 
@@ -299,7 +362,7 @@ class EmployeeController extends AbstractController
      * @Route("/view/{employee}", name="update_post_employee", methods={"POST"})
      */
     public function updateEmployeePost(
-        Employee $employee,
+        Employee               $employee,
         Request                $request,
         DisabilityRepository   $disabilityRepository,
         CityRepository         $cityRepository,

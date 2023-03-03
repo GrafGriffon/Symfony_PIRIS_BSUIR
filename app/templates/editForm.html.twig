@@ -1,6 +1,6 @@
 {#<link href="{{ asset('css/product.css') }}" rel="stylesheet"/>#}
 <body>
-<title>Adding employee</title>
+<title>Edit</title>
 <form action="" method="post">
     <label for="fname">First name:</label><br>
     <input type="text" id="fname" name="fname" value="{{ employee.fname }}"><br>
@@ -83,5 +83,6 @@
     <br>
     <input type="submit" value="Submit">
 </form>
-<a style="color: red" href={{'/employee/list'}}>{{ 'To main page' }}</a>
+<a style="color: red" href={{'/employee/list'}}>{{ 'To main page' }}</a><br>
+<a style="color: red" href={{'/employee/view/'~employee.id~'/operations'}}>{{ 'Счета' }}</a>
 </body>

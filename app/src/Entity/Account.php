@@ -44,7 +44,7 @@ class Account
     private $isMainAccount;
 
     #[ORM\Column(type: 'bigint', nullable: true)]
-    private int $countPercent = 0;
+    private ?int $countPercent = 0;
 
     public function getId(): ?int
     {
@@ -53,10 +53,10 @@ class Account
 
     public function getCountPercent(): int
     {
-        return $this->countPercent ?? 0;
+        return $this->countPercent=== null ? 0 : $this->countPercent;
     }
 
-    public function setCountPercent(string $countPercent): self
+    public function setCountPercent(int $countPercent): self
     {
         $this->countPercent = $countPercent;
 
@@ -169,5 +169,21 @@ class Account
     public function setIsMainAccount($isMainAccount): void
     {
         $this->isMainAccount = $isMainAccount;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEmployee()
+    {
+        return $this->employee;
+    }
+
+    /**
+     * @param mixed $employee
+     */
+    public function setEmployee($employee): void
+    {
+        $this->employee = $employee;
     }
 }
