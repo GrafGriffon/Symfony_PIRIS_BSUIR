@@ -50,6 +50,10 @@ class Account
     #[ORM\Column(type: 'bigint', nullable: true)]
     private ?int $countPercent = 0;
 
+    #[ORM\OneToMany(targetEntity: "Card", mappedBy: "account")]
+    #[ORM\JoinColumn(nullable: true)]
+    private $card;
+
     public function getId(): ?int
     {
         return $this->id;
